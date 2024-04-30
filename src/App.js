@@ -35,7 +35,7 @@ const App = () => {
   return (
     <div>
       <nav>
-        <button onClick={() => setActiveTab('search')}>Search Papers</button>
+        <button onClick={() => setActiveTab('search')}>Search AI Papers</button>
         <button onClick={() => setActiveTab('summary')}>Summarize/Translate</button>
         <button onClick={() => setActiveTab('algorithm')}>Algorithm</button>
       </nav>
