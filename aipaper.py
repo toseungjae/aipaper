@@ -1,5 +1,16 @@
 import streamlit as st
 
+# Set the sidebar title
+st.sidebar.title("Navigation")
+
+# Create API Key input in the sidebar
+api_key = st.sidebar.text_input("Enter your API Key", type="password")
+if api_key:
+    st.sidebar.write("API Key is set.")
+    st.session_state.api_key = api_key
+else:
+    st.sidebar.write("Please enter your API Key.")
+
 # 사이드바 메뉴 항목 정의
 menu = ['AI 논문 검색', '요약', '번역', 'AI 알고리즘']
 choice = st.sidebar.selectbox('메뉴', menu)
