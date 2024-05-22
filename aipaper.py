@@ -9,7 +9,7 @@ if api_key:
     st.sidebar.write("API Key is set.")
     st.session_state.api_key = api_key
 else:
-    st.sidebar.write("Please enter your API Key.")
+    st.sidebar.write("API Key를 입력해 주세요.")
 
 # 사이드바 메뉴 항목 정의
 menu = ['AI 논문 검색', '요약', '번역', 'AI 알고리즘']
