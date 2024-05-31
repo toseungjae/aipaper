@@ -1,4 +1,15 @@
 import streamlit as st
+from openai import OpenAI
+
+# Set a default model
+# edited by Lucas
+if "openai_model" not in st.session_state:
+    st.session_state["openai_model"] = "gpt-3.5-turbo"
+
+# Initialize chat history
+# edited by Lucas
+if "messages" not in st.session_state:
+    st.session_state.messages = []
 
 # Set the sidebar title
 st.sidebar.title("Navigation")
@@ -25,12 +36,44 @@ def ai_paper_search():
 
 # 요약 페이지
 def summary():
+
+    ## Set OpenAI API key from Streamlit secrets
+    ## edited by Lucas
+    client = OpenAI(api_key=api_key)
+
+    ## Initialize chat history
+    if "summary_messages" not in st.session_state:
+        st.session_state.summary_messages = []
+
     st.title('요약')
     text = st.text_area('요약할 텍스트를 입력하세요')
     if st.button('요약하기'):
         if text:
             st.write('요약된 결과:')
             # 여기에 요약 알고리즘을 구현
+
+            # Add user message to chat history
+            st.session_state.summary_messages.append({"role": "user", "content": text})
+
+            # Display user message in chat message container
+            stream = client.chat.completions.create (
+                model = st.session_state["openai_model"],
+                messages = [
+                    {"role": m["role"], "content": m["content"]}
+                    for m in st.session_state.summary_messages
+                ],
+            )
+
+            # Parsing stream 
+            message_content = stream.choices[0].message.content
+
+            # Write result
+            st.write (message_content)
+
+            # Empty chat history
+            st.session_state.summary_messages.clear()
+            
+            
         else:
             st.write('요약할 텍스트를 입력하세요.')
 
