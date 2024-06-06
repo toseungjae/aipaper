@@ -1,13 +1,16 @@
 import streamlit as st
 from openai import OpenAI
 
+from langchain.prompts import PromptTemplate
+from langchain_openai import ChatOpenAI
+from langchain_core.output_parsers import StrOutputParser
+from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
+
 # Set a default model
-# edited by Lucas
 if "openai_model" not in st.session_state:
     st.session_state["openai_model"] = "gpt-3.5-turbo"
 
 # Initialize chat history
-# edited by Lucas
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
@@ -36,47 +39,50 @@ def ai_paper_search():
 
 # 요약 페이지
 def summary():
+    # 애플리케이션 제목 설정
+    st.title("문장 요약기")
 
-    ## Set OpenAI API key from Streamlit secrets
-    ## edited by Lucas
-    client = OpenAI(api_key=api_key)
+    # 사이드바에 OpenAI API 키 입력 필드 추가
+    api_key = st.sidebar.text_input("OpenAI API 키를 입력하세요:", type="password")
 
-    ## Initialize chat history
-    if "summary_messages" not in st.session_state:
-        st.session_state.summary_messages = []
+    # 요약할 텍스트 입력 필드 추가
+    text_to_summarize = st.text_area("요약할 텍스트를 입력하세요:", "")
 
-    st.title('요약')
-    text = st.text_area('요약할 텍스트를 입력하세요')
-    if st.button('요약하기'):
-        if text:
-            st.write('요약된 결과:')
-            # 여기에 요약 알고리즘을 구현
+    # 프롬프트 템플릿 정의
+    template = """
+    당신은 문서 요약 전문가입니다. 주어진 텍스트를 간단하고 명확하게 요약해 주세요.
+    텍스트: {text}
+    요약:
+    """
+    prompt = PromptTemplate.from_template(template)
 
-            # Add user message to chat history
-            st.session_state.summary_messages.append({"role": "user", "content": text})
+    # OpenAI 채팅 모델 초기화
+    if api_key:
+        model = ChatOpenAI(
+            model="gpt-4",
+            max_tokens=1024,
+            temperature=0.5,
+            api_key=api_key,
+            streaming=True,
+            callbacks=[StreamingStdOutCallbackHandler()]
+        )
 
-            # Display user message in chat message container
-            stream = client.chat.completions.create (
-                model = st.session_state["openai_model"],
-                messages = [
-                    {"role": m["role"], "content": m["content"]}
-                    for m in st.session_state.summary_messages
-                ],
-            )
+        # 문자열 출력 파서 초기화
+        output_parser = StrOutputParser()
 
-            # Parsing stream 
-            message_content = stream.choices[0].message.content
+        # 프롬프트, 모델, 출력 파서를 연결하여 처리 체인 구성
+        chain = prompt | model | output_parser
 
-            # Write result
-            st.write (message_content)
-
-            # Empty chat history
-            st.session_state.summary_messages.clear()
-            
-            
-        else:
-            st.write('요약할 텍스트를 입력하세요.')
-
+        # 버튼 클릭 시 체인 실행
+        if st.button("요약 시작"):
+            if text_to_summarize:
+                result = chain.invoke({"text": text_to_summarize})
+                st.write("### 요약 결과:")
+                st.write(result)
+            else:
+                st.write("요약할 텍스트를 입력하세요.")
+    else:
+        st.warning("사이드바에서 API 키를 입력하세요.")
 # 번역 페이지
 def translation():
     st.title('번역')
